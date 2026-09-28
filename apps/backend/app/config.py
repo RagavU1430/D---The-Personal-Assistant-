@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "D - The Personal Assistant"
+    app_name: str = "JARVIS-X"
     app_version: str = "0.1.0"
     app_env: Literal["development", "test", "production"] = "development"
     host: str = "127.0.0.1"

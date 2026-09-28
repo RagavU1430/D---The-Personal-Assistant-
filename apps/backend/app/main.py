@@ -19,12 +19,12 @@ async def lifespan(_: FastAPI):
     init_db()
     log_event(
         logger,
-        "D - The Personal Assistant backend started",
+        "JARVIS-X backend started",
         environment=settings.app_env,
         version=settings.app_version,
     )
     yield
-    log_event(logger, "D - The Personal Assistant backend stopped")
+    log_event(logger, "JARVIS-X backend stopped")
 
 
 app = FastAPI(
