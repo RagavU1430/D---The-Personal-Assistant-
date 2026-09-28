@@ -1,0 +1,17 @@
+from fastapi import APIRouter
+from pydantic import BaseModel
+
+from ..config import settings
+
+router = APIRouter(tags=["health"])
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    version: str
+
+
+@router.get("/health", response_model=HealthResponse)
+async def health() -> HealthResponse:
+    return HealthResponse(status="ok", service="jarvis-x-backend", version=settings.app_version)

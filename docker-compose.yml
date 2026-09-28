@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    profiles: [production]
+    environment:
+      POSTGRES_DB: d_assistant
+      POSTGRES_USER: d_assistant
+      POSTGRES_PASSWORD: change-me-only-for-local-development
+    ports:
+      - "5432:5432"
+    volumes:
+      - d-postgres:/var/lib/postgresql/data
+volumes:
+  d-postgres:

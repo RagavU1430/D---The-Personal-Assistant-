@@ -1,0 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; color: #cbd5e1; background: #07111f; }
+body { margin: 0; min-width: 320px; background: radial-gradient(circle at top, #102b43 0, #07111f 45%, #040a12 100%); }
+button, input { font: inherit; }

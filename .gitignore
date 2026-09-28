@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Environment and secrets
+.env
+*.key
+*.pem
+credentials/
+tokens/
+secrets/
+
+# Databases and private data
+*.db
+*.sqlite
+*.sqlite3
+data/logs/*
+data/memory/*
+!data/logs/.gitkeep
+!data/memory/.gitkeep
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# Rust / Tauri
+apps/desktop/src-tauri/target/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
