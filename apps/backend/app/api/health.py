@@ -14,4 +14,4 @@ class HealthResponse(BaseModel):
 
 @router.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
-    return HealthResponse(status="ok", service="jarvis-x-backend", version=settings.app_version)
+    return HealthResponse(status="ok", service="d-personal-assistant-backend", version=settings.app_version)

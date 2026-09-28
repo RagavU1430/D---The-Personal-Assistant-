@@ -1,6 +1,6 @@
 # D - The Personal Assistant Desktop
 
-React, TypeScript, Vite, and Tailwind UI foundation. Start independently with:
+React, TypeScript, Vite, and Tailwind UI foundation for D - The Personal Assistant. Start independently with:
 
 ```powershell
 npm install

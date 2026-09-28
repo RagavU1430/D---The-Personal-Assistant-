@@ -1,6 +1,6 @@
 # D - The Personal Assistant Backend
 
-FastAPI foundation for the Personal AI Operating Assistant.
+FastAPI foundation for the D - The Personal Assistant personal AI operating assistant.
 
 ```powershell
 python -m pip install -r requirements.txt
