@@ -7,4 +7,4 @@ def test_health_endpoint() -> None:
     with TestClient(app) as client:
         response = client.get("/api/v1/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "service": "jarvis-x-backend", "version": "0.1.0"}
+    assert response.json() == {"status": "ok", "service": "d-personal-assistant-backend", "version": "0.1.0"}

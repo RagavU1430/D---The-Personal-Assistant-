@@ -4,7 +4,7 @@ D - The Personal Assistant is a monorepo with an independently runnable React/Vi
 
 ## Frontend
 
-The desktop UI is a dark, futuristic React app styled with Tailwind. It provides a health check and placeholder system status in Phase 0 without enabling real system metrics or autonomous actions.
+The desktop UI is a dark, futuristic React app styled with Tailwind. It provides health status, chat, and visible tool execution status without enabling autonomous actions.
 
 ## Backend
 
@@ -16,11 +16,17 @@ AI providers are abstracted through an `AIProvider` interface and a factory so t
 
 ## Agent layer
 
-The agent layer defines orchestrator, planner, executor, observer, and verifier interfaces only. No autonomous decision loops are implemented in Phase 0.
+The planner maps supported system requests to registered tools. Chat executes SAFE plans through `ToolExecutor`, passes structured `ToolResult` data back to the provider, and exposes confirmation or failure states when execution cannot proceed.
 
 ## Tools
 
-Tools use a `BaseTool` abstraction plus a `ToolRegistry` for discovery and registration. This preserves separation between allowed actions and future OS/browser/terminal capabilities.
+Phase 2 implements a metadata-aware `BaseTool`, Pydantic schemas, centralized `ToolRegistry`, and timeout-bounded `ToolExecutor`. The executor is the only path from a plan to a tool and enforces validation, risk policy, confirmation, result normalization, and audit logging. The default registry contains read-only system information tools only.
+
+Phase 3 adds a `ComputerController` abstraction with a fake implementation for tests and a Windows implementation for allowlisted applications, window management, input, and on-demand screenshots. Computer tools remain ordinary registered tools and cannot bypass the executor.
+
+## Always-on runtime
+
+`DApplicationLifecycle` tracks `STARTING`, `READY`, `DEGRADED`, `STOPPING`, `STOPPED`, and `ERROR` states. It initializes the registry and controller during FastAPI lifespan startup, resumes only configured capabilities, and emergency-stops computer control during shutdown. User-controlled startup uses the standard per-user Windows Startup folder and can be disabled through the API or desktop UI.
 
 ## Security
 

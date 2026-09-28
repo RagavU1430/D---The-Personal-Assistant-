@@ -30,7 +30,7 @@ npm install
 
 ## Environment setup
 
-Create a local `.env` file from `.env.example` and keep provider keys optional for Phase 0. The application is designed to start without OpenAI, Gemini, or Anthropic credentials configured.
+Create a local `.env` file from `.env.example`. Provider keys are optional; select one with `AI_PROVIDER=gemini`, `AI_PROVIDER=openrouter`, or `AI_PROVIDER=nvidia_nim`. Configure the matching `GEMINI_API_KEY`, `OPENROUTER_API_KEY`, or `NVIDIA_NIM_API_KEY`. With no provider selected, D uses the local mock provider.
 
 ## Backend startup
 
@@ -78,8 +78,8 @@ mypy app
 
 ## Current phase
 
-Phase 0 is IN PROGRESS and acts as the stable architecture foundation for all future phases.
+Phase 3 is implemented: registered read-only system and controlled Windows computer tools run through Pydantic validation, the permission engine, the timeout-bounded executor, and audit logging. Tool discovery is available at `/api/v1/tools`, execution at `/api/v1/tools/execute`, and safe computer requests can flow through chat. Arbitrary shell, browser, and file-mutation tools remain disabled.
 
 ## Roadmap
 
-See `docs/ROADMAP.md` for the full plan. Phase 0 is active; all later phases remain planned.
+See `docs/ROADMAP.md` for the full plan. Phase 3 computer control remains planned.

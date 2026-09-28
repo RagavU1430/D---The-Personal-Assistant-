@@ -1,6 +1,6 @@
 # D - The Personal Assistant Backend
 
-FastAPI foundation for the D - The Personal Assistant personal AI operating assistant.
+FastAPI runtime for D - The Personal Assistant, including secure system tools, Windows-first computer control, lifecycle health, and user-controlled startup settings.
 
 ```powershell
 python -m pip install -r requirements.txt
