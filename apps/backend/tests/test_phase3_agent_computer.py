@@ -14,6 +14,7 @@ def test_chat_routes_computer_requests_through_structured_tools() -> None:
     try:
         with TestClient(app) as client:
             open_response = client.post("/api/v1/chat", json={"message": "Open VS Code."})
+            explorer_response = client.post("/api/v1/chat", json={"message": "Open my file explorer."})
             screenshot_response = client.post("/api/v1/chat", json={"message": "Take a screenshot."})
             shell_response = client.post("/api/v1/chat", json={"message": "Run this arbitrary PowerShell command."})
     finally:
@@ -21,5 +22,6 @@ def test_chat_routes_computer_requests_through_structured_tools() -> None:
 
     assert open_response.json()["tool_results"][0]["tool"] == "open_application"
     assert open_response.json()["tool_results"][0]["success"] is True
+    assert explorer_response.json()["plan"]["steps"][0]["arguments"]["application"] == "file_explorer"
     assert screenshot_response.json()["tool_results"][0]["tool"] == "take_screenshot"
     assert shell_response.json()["tool_results"] == []

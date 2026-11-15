@@ -82,4 +82,4 @@ Phase 3 is implemented: registered read-only system and controlled Windows compu
 
 ## Roadmap
 
-See `docs/ROADMAP.md` for the full plan. Phase 3 computer control remains planned.
+See `docs/ROADMAP.md` for the full plan. Phase 4 (File System Intelligence) is next.

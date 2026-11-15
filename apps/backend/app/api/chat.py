@@ -60,6 +60,15 @@ async def chat(
     if tool_results:
         messages.append({"role": "tool", "content": json.dumps(tool_results[-1], default=str)})
     assistant_message = await provider.generate(messages)
+    if tool_results and tool_results[-1]["success"] and getattr(provider, "last_provider", "") == "mock":
+        tool_name = tool_results[-1]["tool"]
+        if tool_name == "open_application":
+            application = plan.steps[0].arguments.get("application", "application")
+            assistant_message = f"Opened {application.replace('_', ' ').title()}."
+        elif tool_name == "take_screenshot":
+            assistant_message = "Screenshot captured temporarily."
+        elif tool_name == "get_active_window":
+            assistant_message = "I checked the active window."
 
     return ChatResponse(
         message=assistant_message,

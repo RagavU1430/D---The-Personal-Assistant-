@@ -5,6 +5,8 @@ JARVIS-X treats model output as untrusted data. Tool names and arguments are acc
 Phase 2 enables only read-only system information tools. Terminal, browser, computer-control, deletion, messaging, and remote-access capabilities remain unavailable until later phases receive explicit policy and tests.
 
 Phase 3 computer control remains structured and allowlisted. Applications are selected by configured names, never executable paths from model output. Mouse coordinates and keyboard keys are validated, text entry and window closing require confirmation, and the emergency stop disables new controller actions until explicitly resumed. Windows startup uses the per-user Startup folder only; no hidden persistence or unrelated startup changes are created.
+
+File handling is limited to moving configured paths to the Recycle Bin after confirmation. Permanent deletion and unrestricted file roots remain blocked.
 # Security
 
 Phase 0 uses explicit `SAFE`, `CONFIRM`, and `BLOCK` risk decisions plus an audit logger interface. No Phase 1+ operating-system capability is registered or exposed.

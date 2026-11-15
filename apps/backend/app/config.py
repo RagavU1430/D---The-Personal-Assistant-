@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: Literal["development", "test", "production"] = "development"
     host: str = "127.0.0.1"
-    port: int = Field(default=8000, ge=1, le=65535)
+    port: int = Field(default=8001, ge=1, le=65535)
     database_url: str = "sqlite:///./d.db"
     ai_provider: str = ""
     openai_api_key: str | None = None
@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     nvidia_nim_api_key: str | None = None
     nvidia_nim_base_url: str = "https://integrate.api.nvidia.com/v1"
     ai_model: str = ""
+    ai_models: str = ""
     ai_timeout_seconds: float = Field(default=12.0, gt=0, le=60)
     provider_cooldown_seconds: float = Field(default=30.0, ge=0, le=3600)
     autonomy_level: int = Field(default=1, ge=0, le=4)
@@ -35,6 +36,8 @@ class Settings(BaseSettings):
     enable_terminal: bool = False
     enable_voice: bool = False
     enable_system_tools: bool = True
+    enable_file_tools: bool = False
+    approved_file_roots: str = ""
     start_with_windows: bool = True
     background_mode: bool = True
     launch_ui_at_startup: bool = False
@@ -45,7 +48,7 @@ class Settings(BaseSettings):
     )
     tool_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     log_level: str = "INFO"
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
 
     @property
     def allowed_cors_origins(self) -> list[str]:

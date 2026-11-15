@@ -18,6 +18,8 @@ The centralized registry is built in `app/dependencies.py`. Enabled metadata is 
 
 Phase 2 registers only read-only system tools: `system_status`, `cpu_usage`, `memory_usage`, `disk_usage`, `current_time`, and `jarvis_health`. Phase 3 adds Windows-first computer tools through `ComputerController`: application allowlisting, window state, mouse, keyboard, and on-demand screenshots.
 
+The optional `move_to_recycle_bin` tool is reversible and confirmation-protected. It only accepts paths under `APPROVED_FILE_ROOTS` and uses the native Windows Recycle Bin operation; it never permanently deletes files. Permanent deletion is not implemented.
+
 ## Risk and adding tools
 
 `SAFE` tools may execute automatically. `CONFIRM` tools return `CONFIRMATION_REQUIRED` without executing. `BLOCK` tools return `BLOCKED`. Unknown tools return `TOOL_NOT_FOUND`; malformed arguments return `VALIDATION_ERROR`; execution is bounded by `tool_timeout_seconds`.

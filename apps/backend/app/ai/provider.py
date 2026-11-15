@@ -92,8 +92,9 @@ class MockAIProvider(AIProvider):
                 "arbitrary shell commands directly."
             )
         return (
-            "I understand the request and will keep the workflow structured, safe, "
-            "and focused on the next valid step."
+            "I couldn't reach a configured AI provider right now. "
+            "The request was not answered by a live model; please retry shortly "
+            "or check provider quota and availability."
         )
 
     async def stream(self, messages: list[dict[str, str]], **kwargs: Any) -> AsyncIterator[str]:
@@ -262,17 +263,18 @@ class AIProviderRouter(AIProvider):
     async def generate(self, messages: list[dict[str, str]], **kwargs: Any) -> str:
         last_error: Exception | None = None
         now = time.monotonic()
-        for provider in self.providers:
-            if self._cooldown_until.get(provider.name, 0) > now:
+        for index, provider in enumerate(self.providers):
+            route_key = self._route_key(provider, index)
+            if self._cooldown_until.get(route_key, 0) > now:
                 continue
             try:
                 response = await provider.generate(messages, **kwargs)
-                self.last_provider = provider.name
+                self.last_provider = route_key
                 return response
             except Exception as exc:
                 last_error = exc
                 if self._should_cool_down(exc):
-                    self._cooldown_until[provider.name] = time.monotonic() + self.cooldown_seconds
+                    self._cooldown_until[route_key] = time.monotonic() + self.cooldown_seconds
         if last_error is not None:
             raise last_error
         return await MockAIProvider().generate(messages, **kwargs)
@@ -290,3 +292,8 @@ class AIProviderRouter(AIProvider):
         if isinstance(error, httpx.HTTPStatusError):
             return error.response.status_code == 429 or error.response.status_code >= 500
         return False
+
+    @staticmethod
+    def _route_key(provider: AIProvider, index: int) -> str:
+        model = getattr(provider, "model", "")
+        return f"{provider.name}:{model}" if model else f"{provider.name}:{index}"

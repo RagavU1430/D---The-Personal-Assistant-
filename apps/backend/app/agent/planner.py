@@ -47,6 +47,11 @@ class Planner:
             if self.registry.exists(tool_name):
                 return self.create_plan(text, tool=tool_name, arguments={"application": "vscode"})
 
+        if any(keyword in lowered for keyword in ("open file explorer", "open explorer", "file explorer")):
+            tool_name = "open_application"
+            if self.registry.exists(tool_name):
+                return self.create_plan(text, tool=tool_name, arguments={"application": "file_explorer"})
+
         if any(keyword in lowered for keyword in ("delete", "remove", "rename")):
             tool_name = "file_action"
             if self.registry.exists(tool_name):
