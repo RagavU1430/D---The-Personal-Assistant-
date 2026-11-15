@@ -28,6 +28,7 @@ data/memory/*
 node_modules/
 dist/
 .vite/
+*.tsbuildinfo
 
 # Rust / Tauri
 apps/desktop/src-tauri/target/
