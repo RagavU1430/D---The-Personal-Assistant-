@@ -63,6 +63,17 @@ class MockAIProvider(AIProvider):
                             f"System status is healthy. CPU is {data.get('cpu_percentage')}% "
                             f"and memory is {data.get('memory_percentage')}%."
                         )
+                    if tool == "search_files":
+                        count = data.get("count", 0)
+                        return f"Found {count} matching file(s) under approved roots."
+                    if tool == "read_file":
+                        return f"Read {data.get('size')} bytes from {data.get('path')}."
+                    if tool == "list_large_files":
+                        count = data.get("count", 0)
+                        return f"Located {count} large file(s) exceeding threshold."
+                    if tool == "find_duplicates":
+                        count = data.get("group_count", 0)
+                        return f"Found {count} duplicate file group(s)."
                     return f"{tool} completed successfully with structured data: {json.dumps(data, default=str)}"
                 return f"I could not complete {tool_result.get('tool')}: {tool_result.get('message')}"
             except json.JSONDecodeError:
@@ -218,6 +229,46 @@ class NvidiaNimProvider(OpenRouterProvider):
         yield await self.generate(messages, **kwargs)
 
 
+class CustomOpenAICompatibleProvider(AIProvider):
+    """Generic OpenAI-compatible provider for custom endpoints (Ollama, LM Studio, vLLM, etc.)."""
+
+    def __init__(
+        self,
+        name: str,
+        base_url: str,
+        api_key: str | None = None,
+        model: str | None = None,
+        timeout: float = 12.0,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
+        self.name = name
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key
+        self.model = model
+        self.timeout = timeout
+        self.extra_headers = extra_headers or {}
+
+    async def generate(self, messages: list[dict[str, str]], **kwargs: Any) -> str:
+        if not self.api_key and not self._is_local_endpoint():
+            return f"{self.name} provider requires an API key."
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        headers.update(self.extra_headers)
+        payload = {"model": self.model, "messages": messages}
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload
+            )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+
+    async def stream(self, messages: list[dict[str, str]], **kwargs: Any) -> AsyncIterator[str]:
+        yield await self.generate(messages, **kwargs)
+
+    def _is_local_endpoint(self) -> bool:
+        """Allow keyless access for local endpoints (localhost, 127.0.0.1, 0.0.0.0)."""
+        return any(host in self.base_url for host in ("localhost", "127.0.0.1", "0.0.0.0", "[::1]"))
+
+
 class AIProviderFactory:
     @staticmethod
     def create(
@@ -240,6 +291,16 @@ class AIProviderFactory:
                 model=model or "deepseek-ai/deepseek-v4.1-flash",
                 timeout=timeout,
             )
+        if normalized.startswith("custom:") or (base_url and provider_name):
+            # Format: "custom:provider_name" with base_url provided
+            custom_name = provider_name.replace("custom:", "") if provider_name.startswith("custom:") else provider_name
+            return CustomOpenAICompatibleProvider(
+                name=custom_name,
+                base_url=base_url,
+                api_key=api_key,
+                model=model,
+                timeout=timeout,
+            )
         providers: dict[str, type[AIProvider]] = {
             "mock": MockAIProvider,
             "openai": OpenAIProvider,
@@ -247,6 +308,25 @@ class AIProviderFactory:
             "local": LocalModelProvider,
         }
         return providers.get(normalized, MockAIProvider)()
+
+    @staticmethod
+    def create_custom(
+        name: str,
+        base_url: str,
+        api_key: str | None = None,
+        model: str | None = None,
+        timeout: float = 12.0,
+        extra_headers: dict[str, str] | None = None,
+    ) -> AIProvider:
+        """Create a custom OpenAI-compatible provider."""
+        return CustomOpenAICompatibleProvider(
+            name=name,
+            base_url=base_url,
+            api_key=api_key,
+            model=model,
+            timeout=timeout,
+            extra_headers=extra_headers,
+        )
 
 
 class AIProviderRouter(AIProvider):

@@ -30,14 +30,21 @@ class Settings(BaseSettings):
     ai_models: str = ""
     ai_timeout_seconds: float = Field(default=12.0, gt=0, le=60)
     provider_cooldown_seconds: float = Field(default=30.0, ge=0, le=3600)
+
+    # Custom AI providers (OpenAI-compatible endpoints)
+    # Format: "provider1=base_url,api_key,model|provider2=base_url,api_key,model"
+    custom_ai_providers: str = ""
     autonomy_level: int = Field(default=1, ge=0, le=4)
     enable_browser: bool = False
     enable_computer_control: bool = True
     enable_terminal: bool = False
-    enable_voice: bool = False
+    enable_voice: bool = True
     enable_system_tools: bool = True
     enable_file_tools: bool = False
     approved_file_roots: str = ""
+    protected_file_roots: str = ""
+    max_file_size_mb: int = Field(default=100, ge=1, le=1000)
+    large_file_threshold_mb: int = Field(default=50, ge=1, le=10000)
     start_with_windows: bool = True
     background_mode: bool = True
     launch_ui_at_startup: bool = False
