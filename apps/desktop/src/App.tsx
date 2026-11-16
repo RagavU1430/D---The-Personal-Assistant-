@@ -1,80 +1,158 @@
 import { useEffect, useRef, useState } from "react";
+import { Header, type ViewTab } from "./components/Header";
 import { ChatPanel } from "./components/ChatPanel";
 import { CommandInput } from "./components/CommandInput";
-import { Header } from "./components/Header";
+import { ComputerControlPanel } from "./components/ComputerControlPanel";
+import { SafeToolsPanel } from "./components/SafeToolsPanel";
+import { FileIntelligencePanel } from "./components/FileIntelligencePanel";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { FloatingLauncher } from "./components/FloatingLauncher";
-import { StatusIndicator } from "./components/StatusIndicator";
-import { SystemStatus } from "./components/SystemStatus";
 import { getComputerStatus, getHealth, sendChat, setComputerControl, setStartup } from "./lib/api";
+import type { ChatMessageItem } from "./types/api";
 
 export function App() {
-  const [messages, setMessages] = useState<string[]>([]);
-  const [online, setOnline] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [computerEnabled, setComputerEnabled] = useState(true);
-  const [startupEnabled, setStartupEnabled] = useState(true);
-  const [activated, setActivated] = useState(false);
+  const [currentTab, setCurrentTab] = useState<ViewTab>("chat");
+  const [messages, setMessages] = useState<ChatMessageItem[]>([]);
+  const [online, setOnline] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(false);
+  const [computerEnabled, setComputerEnabled] = useState<boolean>(true);
+  const [startupEnabled, setStartupEnabled] = useState<boolean>(true);
+  const [lifecycleState, setLifecycleState] = useState<string>("READY");
+  const [activated, setActivated] = useState<boolean>(false);
   const commandRef = useRef<HTMLInputElement>(null);
 
   const activateD = () => {
     setActivated(true);
-    commandRef.current?.focus();
+    setCurrentTab("chat");
+    setTimeout(() => {
+      commandRef.current?.focus();
+    }, 100);
   };
 
-  useEffect(() => {
+  const pollStatus = () => {
     getHealth()
       .then(() => setOnline(true))
       .catch(() => setOnline(false));
+
     getComputerStatus()
       .then((status) => {
         setComputerEnabled(status.computer_control);
         setStartupEnabled(status.startup_enabled);
+        setLifecycleState(status.status);
       })
       .catch(() => undefined);
+  };
+
+  useEffect(() => {
+    pollStatus();
+    const interval = setInterval(pollStatus, 10000);
+    return () => clearInterval(interval);
   }, []);
 
+  const handleSendMessage = (value: string) => {
+    if (!value.trim() || busy) return;
+    setBusy(true);
+
+    const userMessage: ChatMessageItem = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      text: value,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+
+    sendChat(value)
+      .then((response) => {
+        const assistantMessage: ChatMessageItem = {
+          id: `assistant-${Date.now()}`,
+          sender: "assistant",
+          text: response.message,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+          intent: response.intent,
+          toolResult: response.tool_results?.[0],
+          plan: response.plan,
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      })
+      .catch(() => {
+        const errorMessage: ChatMessageItem = {
+          id: `err-${Date.now()}`,
+          sender: "system",
+          text: "D backend is currently unavailable. Please verify the backend service is running on port 8001.",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      })
+      .finally(() => {
+        setBusy(false);
+      });
+  };
+
+  const handleToggleComputer = () => {
+    const next = !computerEnabled;
+    setComputerControl(next)
+      .then(() => setComputerEnabled(next))
+      .catch(() => undefined);
+  };
+
+  const handleToggleStartup = () => {
+    const next = !startupEnabled;
+    setStartup(next)
+      .then(() => setStartupEnabled(next))
+      .catch(() => undefined);
+  };
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col p-4 sm:p-8">
-      <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-cyan-900/60 bg-slate-900/70 shadow-2xl shadow-cyan-950/30">
-        <Header />
-        <div className="flex flex-1 flex-col lg:flex-row">
-          <div className="flex min-h-[32rem] flex-1 flex-col">
-            <div className="flex items-center justify-between border-b border-cyan-950 px-6 py-3 text-xs uppercase tracking-widest text-slate-500">
-              <span>Conversation</span>
-              <StatusIndicator online={online} />
+    <main className="mx-auto flex min-h-screen max-w-7xl flex-col p-3 sm:p-6 lg:p-8 font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-cyan-800/50 bg-slate-950/80 shadow-[0_0_50px_rgba(4,20,38,0.8)] backdrop-blur-xl">
+        <Header
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          online={online}
+          computerControlActive={computerEnabled}
+          onToggleComputerControl={handleToggleComputer}
+          lifecycleState={lifecycleState}
+        />
+
+        <div className="flex flex-1 overflow-hidden">
+          {currentTab === "chat" && (
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <ChatPanel
+                messages={messages}
+                onQuickPrompt={(prompt) => handleSendMessage(prompt)}
+                busy={busy}
+              />
+              <CommandInput
+                busy={busy}
+                inputRef={commandRef}
+                onSend={handleSendMessage}
+              />
             </div>
-            <ChatPanel messages={messages} />
-            <CommandInput
-              busy={busy}
-              inputRef={commandRef}
-              onSend={(value) => {
-                setBusy(true);
-                setMessages((current) => [...current, `USER  ${value}`]);
-                sendChat(value)
-                  .then((response) => {
-                    const tool = response.tool_results[0];
-                    const toolStatus = tool ? `TOOL  ${tool.tool}  ${tool.success ? "completed" : tool.error_code}` : "";
-                    setMessages((current) => [...current, toolStatus, `D  ${response.message}`].filter(Boolean));
-                  })
-                  .catch(() => setMessages((current) => [...current, "D  Backend unavailable."]))
-                  .finally(() => setBusy(false));
-              }}
+          )}
+
+          {currentTab === "computer" && (
+            <ComputerControlPanel
+              computerControlActive={computerEnabled}
+              onToggleControl={handleToggleComputer}
             />
-          </div>
-          <SystemStatus
-            computerEnabled={computerEnabled}
-            startupEnabled={startupEnabled}
-            onComputerToggle={() => {
-              const next = !computerEnabled;
-              setComputerControl(next).then(() => setComputerEnabled(next)).catch(() => undefined);
-            }}
-            onStartupToggle={() => {
-              const next = !startupEnabled;
-              setStartup(next).then(() => setStartupEnabled(next)).catch(() => undefined);
-            }}
-          />
+          )}
+
+          {currentTab === "tools" && <SafeToolsPanel />}
+
+          {currentTab === "files" && <FileIntelligencePanel />}
+
+          {currentTab === "settings" && (
+            <SettingsPanel
+              computerEnabled={computerEnabled}
+              startupEnabled={startupEnabled}
+              onComputerToggle={handleToggleComputer}
+              onStartupToggle={handleToggleStartup}
+            />
+          )}
         </div>
       </div>
+
       <FloatingLauncher active={activated} onActivate={activateD} />
     </main>
   );

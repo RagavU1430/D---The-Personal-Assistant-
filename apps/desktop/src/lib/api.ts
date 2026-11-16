@@ -1,4 +1,12 @@
-import type { ChatResponse, ComputerStatus, HealthResponse } from "../types/api";
+import type {
+  ActiveWindowResponse,
+  ChatResponse,
+  ComputerStatus,
+  HealthResponse,
+  ToolMetadata,
+  ToolResult,
+  WindowInfo,
+} from "../types/api";
 import { disable, enable } from "@tauri-apps/plugin-autostart";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8001/api/v1";
@@ -37,4 +45,38 @@ export async function setStartup(enabled: boolean): Promise<void> {
     if (enabled) await enable();
     else await disable();
   }
+}
+
+export async function getTools(): Promise<{ tools: ToolMetadata[] }> {
+  const response = await fetch(`${API_BASE}/tools`);
+  if (!response.ok) throw new Error("Tools unavailable");
+  return response.json() as Promise<{ tools: ToolMetadata[] }>;
+}
+
+export async function executeTool(tool: string, args: Record<string, any> = {}): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool, arguments: args }),
+  });
+  if (!response.ok) throw new Error(`Execution of ${tool} failed`);
+  return response.json() as Promise<ToolResult>;
+}
+
+export async function getWindows(): Promise<{ windows: WindowInfo[] }> {
+  const response = await fetch(`${API_BASE}/windows`);
+  if (!response.ok) throw new Error("Windows listing unavailable");
+  return response.json() as Promise<{ windows: WindowInfo[] }>;
+}
+
+export async function getActiveWindow(): Promise<ActiveWindowResponse> {
+  const response = await fetch(`${API_BASE}/computer/active-window`);
+  if (!response.ok) throw new Error("Active window query failed");
+  return response.json() as Promise<ActiveWindowResponse>;
+}
+
+export async function takeScreenshot(): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/computer/screenshot`, { method: "POST" });
+  if (!response.ok) throw new Error("Screenshot request failed");
+  return response.json() as Promise<ToolResult>;
 }
