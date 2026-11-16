@@ -17,8 +17,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Phase_3-Complete-10B981?style=flat-square&logo=vercel&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/Phase_4-Complete-10B981?style=flat-square&logo=gitbook&logoColor=white&labelColor=0F172A" />
-  <img src="https://img.shields.io/badge/AI_Providers-5_Configured-0EA5E9?style=flat-square&logo=anthropic&logoColor=white&labelColor=0F172A" />
-  <img src="https://img.shields.io/badge/Registered_Tools-30-8B5CF6?style=flat-square&logo=wrench&logoColor=white&labelColor=0F172A" />
+  <img src="https://img.shields.io/badge/Phase_5-Design_In_Progress-F59E0B?style=flat-square&logo=github&logoColor=white&labelColor=0F172A" />
+  <img src="https://img.shields.io/badge/AI_Providers-Custom_Endpoints_Supported-0EA5E9?style=flat-square&logo=anthropic&logoColor=white&labelColor=0F172A" />
+  <img src="https://img.shields.io/badge/Registered_Tools-40+-8B5CF6?style=flat-square&logo=wrench&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/Tests-Passing-10B981?style=flat-square&logo=pytest&logoColor=white&labelColor=0F172A" />
 </p>
 
@@ -43,6 +44,7 @@ No cloud dependency. No hidden autonomy. No surprise executions.
 | **Window Management** | Focus, minimize, maximize, close — with confirmation |
 | **Input Automation** | Precision mouse, keyboard, hotkeys — coordinate and key validated |
 | **Screen Awareness** | On-demand screenshots, active window detection, window enumeration |
+| **File System Intelligence** | Search, read, write, copy, move, rename, compress, find duplicates/large files, organize — all path-restricted |
 | **Safe File Handling** | Move to Recycle Bin (reversible, path-restricted, confirmed) |
 
 ---
@@ -74,9 +76,11 @@ Every action passes through:
 | **NVIDIA NIM** | ✅ Ready | Local/cloud hybrid |
 | **OpenAI** | ⚠️ Stubbed | Interface complete |
 | **Anthropic** | ⚠️ Stubbed | Interface complete |
-| **Local Models** | ⚠️ Stubbed | For future offline use |
+| **Custom OpenAI-Compatible** | ✅ Ready | **Ollama, LM Studio, vLLM, any OpenAI-compatible endpoint** |
 
 **Smart failover:** If a provider times out or rate-limits, D automatically tries the next — with per-model cooldown to prevent hammering.
+
+**Custom endpoints:** Configure `CUSTOM_AI_PROVIDERS` in `.env` (format: `name=base_url,api_key,model|...`). Supports local models with empty API key.
 
 ---
 
@@ -152,15 +156,15 @@ D - The Personal Assistant/
 | **2** | Safe Tool Framework | ✅ Complete |
 | **3** | Windows Computer Control | ✅ Complete |
 | **4** | File System Intelligence | ✅ Complete |
-| **5** | Developer Workflows | 📋 Planned |
+| **5** | Developer JARVIS (Controlled Terminal) | 📝 Design in Progress |
 | **6** | Browser Automation | 📋 Planned |
 | **7** | Persistent Memory | 📋 Planned |
 | **8** | RAG / Knowledge Base | 📋 Planned |
-| **9** | Voice Interaction | 📋 Planned |
+| **9** | Voice Interaction | 📋 Planned (API scaffolding done) |
 | **10** | Screen Vision | 📋 Planned |
 | **11–25** | Autonomy, Workflows, Scheduler, Services, HUD, Remote | 📋 Planned |
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for milestones.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for milestones and [`design_draft.md`](design_draft.md) for Phase 5 design.
 
 ---
 
