@@ -24,10 +24,15 @@ def detect_intent(message: str) -> Intent:
         return Intent.SYSTEM_QUERY
     if any(keyword in text for keyword in ("project", "debug", "error", "fix", "build", "run", "prepare")):
         return Intent.DEVELOPMENT_TASK
+    file_keywords = (
+        "file", "folder", "document", "locate", "directory", "compress", "zip", "duplicate", "organize"
+    )
+    if any(keyword in text for keyword in file_keywords):
+        return Intent.FILE_ACTION
+    if any(keyword in text for keyword in ("search file", "find all", "find files")):
+        return Intent.FILE_ACTION
     if any(keyword in text for keyword in ("browser", "web", "website", "search")):
         return Intent.BROWSER_ACTION
-    if any(keyword in text for keyword in ("file", "folder", "document", "locate")):
-        return Intent.FILE_ACTION
     if any(keyword in text for keyword in ("terminal", "shell", "command", "power shell", "powershell")):
         return Intent.TERMINAL_ACTION
     if "?" in message:

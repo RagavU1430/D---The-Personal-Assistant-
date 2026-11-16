@@ -1,4 +1,4 @@
-import { Activity, ShieldAlert, ShieldCheck, Terminal, Cpu, FolderGit2, Settings, MonitorPlay } from "lucide-react";
+import { Activity, ShieldAlert, ShieldCheck, Terminal, Cpu, FolderGit2, Settings, MonitorPlay, Mic, Volume2 } from "lucide-react";
 
 export type ViewTab = "chat" | "computer" | "tools" | "files" | "settings";
 
@@ -9,6 +9,7 @@ interface HeaderProps {
   computerControlActive: boolean;
   onToggleComputerControl: () => void;
   lifecycleState: string;
+  onOpenVoiceAssistant: () => void;
 }
 
 export function Header({
@@ -18,6 +19,7 @@ export function Header({
   computerControlActive,
   onToggleComputerControl,
   lifecycleState,
+  onOpenVoiceAssistant,
 }: HeaderProps) {
   const tabs: { id: ViewTab; label: string; icon: React.ReactNode }[] = [
     { id: "chat", label: "Assistant", icon: <Terminal size={15} /> },
@@ -44,17 +46,27 @@ export function Header({
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-[0.25em] text-cyan-100">D - ASSISTANT</span>
               <span className="rounded bg-cyan-950/80 px-2 py-0.5 text-[10px] font-mono tracking-wider text-cyan-400 border border-cyan-800/60">
-                PHASE 3 ACTIVE
+                VOICE & COMPUTER READY
               </span>
             </div>
             <p className="text-[11px] font-mono tracking-wider text-slate-400">
-              Personal AI Operating Assistant • Windows Native
+              Personal AI Operating Assistant • Laptop & Desktop Optimized
             </p>
           </div>
         </div>
 
         {/* Global Controls & Status Indicators */}
         <div className="flex items-center gap-3">
+          {/* Quick Voice Assistant Launcher Button */}
+          <button
+            type="button"
+            onClick={onOpenVoiceAssistant}
+            className="flex items-center gap-1.5 rounded-full border border-cyan-400/50 bg-gradient-to-r from-cyan-950 via-slate-900 to-cyan-950 px-3.5 py-1 text-xs font-mono font-bold text-cyan-200 hover:border-cyan-300 hover:scale-105 shadow-[0_0_15px_rgba(6,182,212,0.3)] transition"
+          >
+            <Mic size={14} className="text-cyan-400 animate-pulse" />
+            <span>VOICE ASSIST</span>
+          </button>
+
           {/* Runtime State */}
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900/90 px-3 py-1 text-xs font-mono text-slate-300">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>

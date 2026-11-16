@@ -1,4 +1,4 @@
-# JARVIS-X Tools
+# D - The Personal Assistant Tools
 
 Tools are the only approved capability boundary between the agent and the host system. The model can request a registered tool, but it cannot execute shell, Python, or operating-system commands directly.
 
@@ -16,12 +16,47 @@ Implement `BaseTool` with `name`, `description`, `category`, `version`, `risk_le
 
 The centralized registry is built in `app/dependencies.py`. Enabled metadata is available at `GET /api/v1/tools`. Execution is available at `POST /api/v1/tools/execute` with `{ "tool": "name", "arguments": {} }`.
 
-Phase 2 registers only read-only system tools: `system_status`, `cpu_usage`, `memory_usage`, `disk_usage`, `current_time`, and `jarvis_health`. Phase 3 adds Windows-first computer tools through `ComputerController`: application allowlisting, window state, mouse, keyboard, and on-demand screenshots.
+### Phase 2: Read-Only System Tools
+* `system_status` (SAFE): OS, CPU, RAM, Disk utilization, and Python/app versions.
+* `cpu_usage` (SAFE): Current CPU percentage.
+* `memory_usage` (SAFE): RAM totals, available, used, and percentage.
+* `disk_usage` (SAFE): Disk statistics for the approved root.
+* `current_time` (SAFE): Local system timestamp and timezone.
+* `jarvis_health` (SAFE): Health status of database, AI provider, and tool system.
 
-The optional `move_to_recycle_bin` tool is reversible and confirmation-protected. It only accepts paths under `APPROVED_FILE_ROOTS` and uses the native Windows Recycle Bin operation; it never permanently deletes files. Permanent deletion is not implemented.
+### Phase 3: Windows Computer Control Tools
+* `open_application` (SAFE): Launches allowlisted applications only (`notepad`, `calc`, `explorer`, `code`, `chrome`, `edge`).
+* `close_application` (CONFIRM): Gracefully closes windows via Win32 `PostMessageW(WM_CLOSE)`.
+* `focus_window`, `minimize_window`, `maximize_window` (SAFE): Window focus and state adjustments.
+* `move_mouse`, `click`, `double_click` (SAFE): Validated coordinate cursor movements and clicks.
+* `type_text` (CONFIRM): Types user-provided text into the active window.
+* `press_key`, `hotkey` (SAFE): Dispatches single keys or hotkeys against an approved key allowlist.
+* `take_screenshot` (SAFE): Captures an on-demand temporary screenshot without continuous recording.
+* `get_active_window`, `list_windows` (SAFE): Queries foreground window title and visible window list.
 
-## Risk and adding tools
+### Phase 4: File System Intelligence Tools
+All file tools operate strictly under `APPROVED_FILE_ROOTS`. Mutating tools are additionally blocked from modifying any path under `PROTECTED_FILE_ROOTS`.
 
-`SAFE` tools may execute automatically. `CONFIRM` tools return `CONFIRMATION_REQUIRED` without executing. `BLOCK` tools return `BLOCKED`. Unknown tools return `TOOL_NOT_FOUND`; malformed arguments return `VALIDATION_ERROR`; execution is bounded by `tool_timeout_seconds`.
+| Tool Name | Risk Level | Description |
+|-----------|------------|-------------|
+| `search_files` | SAFE | Searches for files by glob or regex within approved directories. |
+| `read_file` | SAFE | Reads text file contents up to `max_bytes` with metadata and encoding check. |
+| `write_file` | CONFIRM | Writes or creates file contents. Overwrite requires explicit confirmation. |
+| `copy_file` | CONFIRM | Copies files or folders within approved roots. |
+| `move_file` | CONFIRM | Moves files or folders within approved roots. |
+| `rename_file` | CONFIRM | Renames a file or folder safely within its parent directory. |
+| `compress_directory` | CONFIRM | Compresses a directory into `.zip` or `.tar.gz` format. |
+| `list_large_files` | SAFE | Lists files exceeding a configurable size threshold. |
+| `find_duplicates` | SAFE | Groups duplicate files based on file size and SHA-256 content hashes. |
+| `organize_directory` | CONFIRM | Plans or executes directory organization by extension, date, or size. |
+| `move_to_recycle_bin` | CONFIRM | Reversibly moves an approved item to the Windows Recycle Bin using `SHFileOperationW`. |
 
-To add a tool, create its Pydantic input model, implement narrow metadata and a per-tool risk level, register it centrally, add permission/failure/timeout/audit tests, and document it. Computer tools must call `ComputerController`; they must never accept arbitrary executable paths or raw commands. Never use `eval`, `exec`, `os.system`, shell interpolation, or `subprocess(..., shell=True)` for model output.
+## Risk and Safety Governance
+
+* `SAFE` tools execute automatically.
+* `CONFIRM` tools return `CONFIRMATION_REQUIRED` and pause until confirmed by user.
+* `BLOCK` tools return `BLOCKED`.
+* Unknown tools return `TOOL_NOT_FOUND`.
+* Malformed arguments return `VALIDATION_ERROR`.
+* Execution is bounded by `tool_timeout_seconds`.
+* Permanent deletion is not implemented.

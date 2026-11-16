@@ -9,6 +9,7 @@ from .api.computer import router as computer_router
 from .api.errors import unhandled_exception_handler, validation_exception_handler
 from .api.health import router as health_router
 from .api.tools import router as tools_router
+from .api.voice import router as voice_router
 from .config import settings
 from .db import init_db
 from .dependencies import get_lifecycle
@@ -53,3 +54,4 @@ app.include_router(health_router, prefix="/api/v1")
 app.include_router(chat_router, prefix="/api/v1")
 app.include_router(tools_router, prefix="/api/v1")
 app.include_router(computer_router, prefix="/api/v1")
+app.include_router(voice_router, prefix="/api/v1")

@@ -1,26 +1,33 @@
-JARVIS-X treats model output as untrusted data. Tool names and arguments are accepted only through the registry and Pydantic schemas, then passed through the permission engine and `ToolExecutor`. There is no direct model path to shell, Python, filesystem mutation, browser automation, or process control.
-
-`SAFE` tools can run automatically, `CONFIRM` tools return a confirmation contract without execution, and `BLOCK` tools are rejected. Every execution attempt is audit logged with tool, risk, decision, result, duration, and error code; sensitive argument values are not recorded.
-
-Phase 2 enables only read-only system information tools. Terminal, browser, computer-control, deletion, messaging, and remote-access capabilities remain unavailable until later phases receive explicit policy and tests.
-
-Phase 3 computer control remains structured and allowlisted. Applications are selected by configured names, never executable paths from model output. Mouse coordinates and keyboard keys are validated, text entry and window closing require confirmation, and the emergency stop disables new controller actions until explicitly resumed. Windows startup uses the per-user Startup folder only; no hidden persistence or unrelated startup changes are created.
-
-File handling is limited to moving configured paths to the Recycle Bin after confirmation. Permanent deletion and unrestricted file roots remain blocked.
 # Security
 
-Phase 0 uses explicit `SAFE`, `CONFIRM`, and `BLOCK` risk decisions plus an audit logger interface. No Phase 1+ operating-system capability is registered or exposed.
+D - The Personal Assistant treats all model and external output as untrusted data. Tool names and arguments are accepted only through the registry and Pydantic schemas, then passed through the permission engine and `ToolExecutor`. There is no direct model path to shell, arbitrary Python execution, unrestricted filesystem mutation, browser automation, or raw process control.
 
-## Permission model
+`SAFE` tools can run automatically, `CONFIRM` tools return a confirmation contract without execution, and `BLOCK` tools are rejected. Every execution attempt is audit logged with tool, risk, decision, result, duration, and error code; sensitive argument values are redacted.
 
-- `SAFE`: low-risk operations with no approval required
-- `CONFIRM`: actions requiring explicit user approval
-- `BLOCK`: actions prohibited by policy or architecture
+## Permission Model
 
-## Secret handling
+- `SAFE`: Low-risk operations with no approval required (e.g., `system_status`, `search_files`, `read_file`, `list_large_files`, `find_duplicates`).
+- `CONFIRM`: Mutating or stateful actions requiring explicit user approval (e.g., `write_file`, `copy_file`, `move_file`, `rename_file`, `compress_directory`, `organize_directory`, `close_application`, `move_to_recycle_bin`).
+- `BLOCK`: Prohibited actions (arbitrary shell commands, path traversal, operations outside approved roots).
 
-Secrets are loaded from environment configuration and excluded from Git. Logs redact fields containing keys, tokens, passwords, and secrets.
+## Phase 3 Computer Control Governance
 
-## Future computer-control restrictions
+Computer control is strictly bounded and allowlisted:
+* Applications are selected by configured alias names, never executable paths from model output.
+* Mouse coordinates and keyboard keys are validated against strict allowlists.
+* Text entry, window closing, and destructive operations require confirmation.
+* An emergency killswitch disables controller actions instantly until explicitly resumed.
+* Windows startup uses the legitimate per-user Startup folder only.
 
-Future computer, terminal, browser, and filesystem tools must validate structured inputs, remain allowlisted, use permissions, and support an emergency stop before execution.
+## Phase 4 File System Intelligence Security
+
+File tools are guarded by multi-layered security controls:
+* **Approved File Roots:** All paths must resolve within `APPROVED_FILE_ROOTS`. Directory traversal (`..`), symlink escapes, and root drive targets outside approved paths trigger `PATH_NOT_ALLOWED`.
+* **Protected File Roots:** Mutating tools check `PROTECTED_FILE_ROOTS` (e.g. `.git/`, system directories) and reject operations with `PATH_PROTECTED`.
+* **Safe Reversible Deletion:** Hard deletions (`rmdir`, `unlink`) are disabled; only reversible moves to the Windows Recycle Bin via `SHFileOperationW` (`FOF_ALLOWUNDO`) are permitted under confirmation.
+* **Denial-of-Service Mitigations:** File reads and writes enforce `max_file_size_mb` guards (default 100 MB). Compression tools validate destination paths and output size limits.
+* **Audit Trail:** Every file operation logs `{tool, path, risk, decision, duration_ms, success, error_code}` with secret redaction.
+
+## Secret Handling
+
+Secrets are loaded from environment configuration (`.env`) and excluded from Git. Logs automatically redact fields containing keys, tokens, passwords, and secrets.

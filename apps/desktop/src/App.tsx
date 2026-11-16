@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Header, type ViewTab } from "./components/Header";
+import { LaptopTitleBar } from "./components/LaptopTitleBar";
+import { VoiceAssistantOverlay } from "./components/VoiceAssistantOverlay";
 import { ChatPanel } from "./components/ChatPanel";
 import { CommandInput } from "./components/CommandInput";
 import { ComputerControlPanel } from "./components/ComputerControlPanel";
@@ -8,6 +10,7 @@ import { FileIntelligencePanel } from "./components/FileIntelligencePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { FloatingLauncher } from "./components/FloatingLauncher";
 import { getComputerStatus, getHealth, sendChat, setComputerControl, setStartup } from "./lib/api";
+import { voiceEngine } from "./lib/voice";
 import type { ChatMessageItem } from "./types/api";
 
 export function App() {
@@ -19,6 +22,13 @@ export function App() {
   const [startupEnabled, setStartupEnabled] = useState<boolean>(true);
   const [lifecycleState, setLifecycleState] = useState<string>("READY");
   const [activated, setActivated] = useState<boolean>(false);
+
+  // Laptop Window & Voice Assist States
+  const [isCompactMode, setIsCompactMode] = useState<boolean>(false);
+  const [voiceOverlayOpen, setVoiceOverlayOpen] = useState<boolean>(false);
+  const [voiceMuted, setVoiceMuted] = useState<boolean>(false);
+  const [latestVoiceResponse, setLatestVoiceResponse] = useState<string>("");
+
   const commandRef = useRef<HTMLInputElement>(null);
 
   const activateD = () => {
@@ -74,6 +84,12 @@ export function App() {
           plan: response.plan,
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        setLatestVoiceResponse(response.message);
+
+        // Read aloud if not muted and voice is enabled
+        if (!voiceMuted) {
+          voiceEngine.speak(response.message);
+        }
       })
       .catch(() => {
         const errorMessage: ChatMessageItem = {
@@ -104,8 +120,31 @@ export function App() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-7xl flex-col p-3 sm:p-6 lg:p-8 font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
-      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-cyan-800/50 bg-slate-950/80 shadow-[0_0_50px_rgba(4,20,38,0.8)] backdrop-blur-xl">
+    <main
+      className={`mx-auto flex min-h-screen flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 transition-all duration-300 ${
+        isCompactMode
+          ? "max-w-xl p-2 sm:p-4 justify-center"
+          : "max-w-7xl p-3 sm:p-6 lg:p-8"
+      }`}
+    >
+      <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-cyan-800/60 bg-slate-950/85 shadow-[0_0_60px_rgba(4,20,38,0.85)] backdrop-blur-2xl">
+        {/* Native Laptop TitleBar */}
+        <LaptopTitleBar
+          isCompactMode={isCompactMode}
+          onToggleCompactMode={() => setIsCompactMode((prev) => !prev)}
+          voiceActive={voiceOverlayOpen}
+          onToggleVoice={() => setVoiceOverlayOpen((prev) => !prev)}
+          voiceMuted={voiceMuted}
+          onToggleMute={() => {
+            setVoiceMuted((prev) => {
+              const next = !prev;
+              if (next) voiceEngine.stopSpeaking();
+              return next;
+            });
+          }}
+        />
+
+        {/* Main Application Header */}
         <Header
           currentTab={currentTab}
           onTabChange={setCurrentTab}
@@ -113,8 +152,10 @@ export function App() {
           computerControlActive={computerEnabled}
           onToggleComputerControl={handleToggleComputer}
           lifecycleState={lifecycleState}
+          onOpenVoiceAssistant={() => setVoiceOverlayOpen(true)}
         />
 
+        {/* Tab Views */}
         <div className="flex flex-1 overflow-hidden">
           {currentTab === "chat" && (
             <div className="flex flex-1 flex-col overflow-hidden">
@@ -127,6 +168,7 @@ export function App() {
                 busy={busy}
                 inputRef={commandRef}
                 onSend={handleSendMessage}
+                onOpenVoiceAssistant={() => setVoiceOverlayOpen(true)}
               />
             </div>
           )}
@@ -152,6 +194,25 @@ export function App() {
           )}
         </div>
       </div>
+
+      {/* Futuristic Voice Assistant Holographic Overlay */}
+      <VoiceAssistantOverlay
+        isOpen={voiceOverlayOpen}
+        onClose={() => setVoiceOverlayOpen(false)}
+        onVoiceCommand={(cmd) => {
+          handleSendMessage(cmd);
+        }}
+        isProcessing={busy}
+        assistantSpokenResponse={latestVoiceResponse}
+        voiceMuted={voiceMuted}
+        onToggleMute={() => {
+          setVoiceMuted((prev) => {
+            const next = !prev;
+            if (next) voiceEngine.stopSpeaking();
+            return next;
+          });
+        }}
+      />
 
       <FloatingLauncher active={activated} onActivate={activateD} />
     </main>
