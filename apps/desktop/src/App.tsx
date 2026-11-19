@@ -7,6 +7,7 @@ import { CommandInput } from "./components/CommandInput";
 import { ComputerControlPanel } from "./components/ComputerControlPanel";
 import { SafeToolsPanel } from "./components/SafeToolsPanel";
 import { FileIntelligencePanel } from "./components/FileIntelligencePanel";
+import { DeveloperJarvisPanel } from "./components/DeveloperJarvisPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { FloatingLauncher } from "./components/FloatingLauncher";
 import { getComputerStatus, getHealth, sendChat, setComputerControl, setStartup } from "./lib/api";
@@ -183,6 +184,14 @@ export function App() {
           {currentTab === "tools" && <SafeToolsPanel />}
 
           {currentTab === "files" && <FileIntelligencePanel />}
+
+          {currentTab === "developer" && (
+            <DeveloperJarvisPanel
+              busy={busy}
+              onCommand={handleSendMessage}
+              latestResponse={latestVoiceResponse}
+            />
+          )}
 
           {currentTab === "settings" && (
             <SettingsPanel

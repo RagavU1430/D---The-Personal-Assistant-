@@ -291,7 +291,7 @@ class AIProviderFactory:
                 model=model or "deepseek-ai/deepseek-v4.1-flash",
                 timeout=timeout,
             )
-        if normalized.startswith("custom:") or (base_url and provider_name):
+        if base_url and provider_name and (normalized.startswith("custom:") or base_url):
             # Format: "custom:provider_name" with base_url provided
             custom_name = provider_name.replace("custom:", "") if provider_name.startswith("custom:") else provider_name
             return CustomOpenAICompatibleProvider(

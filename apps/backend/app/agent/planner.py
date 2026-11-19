@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from app.tools.registry import ToolRegistry
@@ -21,11 +22,14 @@ class Planner:
         )
         return AgentPlan(goal=goal, steps=[step])
 
-    def plan(self, request: str) -> AgentPlan:
+    def plan(self, request: str) -> AgentPlan:  # noqa: C901
         text = request.strip()
         lowered = text.lower()
 
-        mappings = (
+        # ----------------------------------------------------------------
+        # System tools
+        # ----------------------------------------------------------------
+        system_mappings = (
             (("system status", "system information", "check my system"), "system_status"),
             (("ram", "memory"), "memory_usage"),
             (("cpu", "processor"), "cpu_usage"),
@@ -35,24 +39,112 @@ class Planner:
             (("screenshot", "screen capture", "capture my screen"), "take_screenshot"),
             (("active window", "current window", "what window"), "get_active_window"),
         )
-        for keywords, tool_name in mappings:
-            if any(keyword in lowered for keyword in keywords) and self.registry.exists(tool_name):
+        for keywords, tool_name in system_mappings:
+            if any(k in lowered for k in keywords) and self.registry.exists(tool_name):
                 return self.create_plan(text, tool=tool_name)
 
-        if any(
-            keyword in lowered
-            for keyword in ("open vs code", "open vscode", "launch vscode", "open code", "code editor")
+        # ----------------------------------------------------------------
+        # Application tools
+        # ----------------------------------------------------------------
+        if any(k in lowered for k in ("open vs code", "open vscode", "launch vscode", "open code", "code editor")):
+            if self.registry.exists("open_application"):
+                return self.create_plan(text, tool="open_application", arguments={"application": "vscode"})
+
+        if any(k in lowered for k in ("open file explorer", "open explorer", "file explorer")):
+            if self.registry.exists("open_application"):
+                return self.create_plan(text, tool="open_application", arguments={"application": "file_explorer"})
+
+        # ----------------------------------------------------------------
+        # Phase 5 — Terminal / Developer JARVIS tools
+        # ----------------------------------------------------------------
+        _wd = "."
+
+        if self.registry.exists("git_status") and any(
+            k in lowered for k in ("git status", "git state", "check repo", "repo status")
         ):
-            tool_name = "open_application"
-            if self.registry.exists(tool_name):
-                return self.create_plan(text, tool=tool_name, arguments={"application": "vscode"})
+            return self.create_plan(text, tool="git_status", arguments={"working_dir": _wd})
 
-        if any(keyword in lowered for keyword in ("open file explorer", "open explorer", "file explorer")):
-            tool_name = "open_application"
-            if self.registry.exists(tool_name):
-                return self.create_plan(text, tool=tool_name, arguments={"application": "file_explorer"})
+        if self.registry.exists("git_diff") and any(
+            k in lowered for k in ("git diff", "show diff", "what changed", "what did i change", "show changes")
+        ):
+            staged = "staged" in lowered or "--staged" in lowered
+            return self.create_plan(text, tool="git_diff", arguments={"working_dir": _wd, "staged": staged})
 
-        # File intelligence tools (Phase 4)
+        if self.registry.exists("git_log") and any(
+            k in lowered for k in ("git log", "recent commits", "commit history", "last commits", "show commits")
+        ):
+            return self.create_plan(text, tool="git_log", arguments={"working_dir": _wd, "max_entries": 10})
+
+        if self.registry.exists("git_branch") and any(
+            k in lowered for k in ("git branch", "what branch", "current branch", "which branch", "list branches")
+        ):
+            return self.create_plan(text, tool="git_branch", arguments={"working_dir": _wd})
+
+        if self.registry.exists("git_commit") and any(
+            k in lowered for k in ("git commit", "commit with message", "stage and commit", "commit changes")
+        ):
+            match = re.search(r'["\'](.+?)["\']', text)
+            msg = match.group(1) if match else "chore: update"
+            add_all = "all" in lowered or " -a" in lowered
+            return self.create_plan(
+                text,
+                tool="git_commit",
+                arguments={"working_dir": _wd, "message": msg, "add_all": add_all},
+            )
+
+        if self.registry.exists("git_push") and any(
+            k in lowered for k in ("git push", "push to remote", "push my changes", "push changes")
+        ):
+            return self.create_plan(text, tool="git_push", arguments={"working_dir": _wd, "remote": "origin"})
+
+        if self.registry.exists("run_tests") and any(
+            k in lowered for k in ("run tests", "run pytest", "run my tests", "test my code", "execute tests")
+        ):
+            return self.create_plan(text, tool="run_tests", arguments={"working_dir": _wd, "framework": "auto"})
+
+        if self.registry.exists("analyze_logs") and any(
+            k in lowered for k in (
+                "analyze log", "analyze error", "explain error", "diagnose log", "analyze this error"
+            )
+        ):
+            return self.create_plan(text, tool="analyze_logs", arguments={"content": text})
+
+        if self.registry.exists("execute_command") and any(
+            k in lowered for k in (
+                "run ruff", "run mypy", "run black", "run make", "run cmake", "run command", "execute command"
+            )
+        ):
+            parts = text.split()
+            # Handle "run command python --version" pattern
+            if "run command" in lowered:
+                idx = lowered.index("run command")
+                remainder = text[idx + len("run command"):].strip()
+                parts = remainder.split()
+            elif "execute command" in lowered:
+                idx = lowered.index("execute command")
+                remainder = text[idx + len("execute command"):].strip()
+                parts = remainder.split()
+            else:
+                cmd = parts[1] if len(parts) > 1 else "ruff"
+                extra = parts[2:] if len(parts) > 2 else []
+                return self.create_plan(
+                    text,
+                    tool="execute_command",
+                    arguments={"command": cmd, "args": extra, "working_dir": _wd},
+                )
+
+            if parts:
+                cmd = parts[0]
+                extra = parts[1:] if len(parts) > 1 else []
+                return self.create_plan(
+                    text,
+                    tool="execute_command",
+                    arguments={"command": cmd, "args": extra, "working_dir": _wd},
+                )
+
+        # ----------------------------------------------------------------
+        # Phase 4 — File System Intelligence tools
+        # ----------------------------------------------------------------
         if self.registry.exists("search_files") and any(
             k in lowered for k in ("search file", "search for", "find all", "find files", "find my")
         ):
@@ -83,17 +175,21 @@ class Planner:
         ):
             return self.create_plan(text, tool="find_duplicates", arguments={"min_size_mb": 1})
 
-        organize_keywords = (
-            "organize directory", "organize folder", "organize my downloads", "organize files", "organize"
-        )
-        if self.registry.exists("organize_directory") and any(k in lowered for k in organize_keywords):
+        if self.registry.exists("organize_directory") and any(
+            k in lowered for k in (
+                "organize directory", "organize folder", "organize my downloads", "organize files", "organize"
+            )
+        ):
             return self.create_plan(text, tool="organize_directory", arguments={"root": ".", "dry_run": True})
 
         if self.registry.exists("compress_directory") and any(
             k in lowered for k in ("compress directory", "compress folder", "zip folder", "zip directory")
         ):
-            dest_args = {"source": ".", "destination": "archive.zip"}
-            return self.create_plan(text, tool="compress_directory", arguments=dest_args)
+            return self.create_plan(
+                text,
+                tool="compress_directory",
+                arguments={"source": ".", "destination": "archive.zip"},
+            )
 
         if self.registry.exists("rename_file") and "rename" in lowered:
             return self.create_plan(text, tool="rename_file")
@@ -111,16 +207,6 @@ class Planner:
             k in lowered for k in ("recycle bin", "delete file", "recycle file", "remove file")
         ):
             return self.create_plan(text, tool="move_to_recycle_bin")
-
-        if any(keyword in lowered for keyword in ("delete", "remove", "rename")):
-            tool_name = "file_action"
-            if self.registry.exists(tool_name):
-                return self.create_plan(text, tool=tool_name)
-
-        if any(keyword in lowered for keyword in ("run", "execute", "shell", "command")):
-            tool_name = "terminal_command"
-            if self.registry.exists(tool_name):
-                return self.create_plan(text, tool=tool_name)
 
         return self.create_plan(text)
 

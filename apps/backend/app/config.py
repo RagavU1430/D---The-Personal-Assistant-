@@ -37,14 +37,16 @@ class Settings(BaseSettings):
     autonomy_level: int = Field(default=1, ge=0, le=4)
     enable_browser: bool = False
     enable_computer_control: bool = True
-    enable_terminal: bool = False
     enable_voice: bool = True
     enable_system_tools: bool = True
+
+    # Phase 4 — File System Intelligence
     enable_file_tools: bool = False
     approved_file_roots: str = ""
     protected_file_roots: str = ""
     max_file_size_mb: int = Field(default=100, ge=1, le=1000)
     large_file_threshold_mb: int = Field(default=50, ge=1, le=10000)
+
     start_with_windows: bool = True
     background_mode: bool = True
     launch_ui_at_startup: bool = False
@@ -56,6 +58,16 @@ class Settings(BaseSettings):
     tool_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
+
+    # Phase 5 — Terminal / Developer JARVIS tools
+    enable_terminal_tools: bool = False
+    approved_working_roots: str = ""
+    command_allowlist: str = (
+        "git,pytest,python,node,npm,cargo,go,dotnet,make,cmake,ruff,mypy,black"
+    )
+    git_allowed_subcommands: str = "status,diff,log,branch,commit,push"
+    terminal_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    max_output_bytes: int = Field(default=1_000_000, ge=1024, le=50_000_000)
 
     @property
     def allowed_cors_origins(self) -> list[str]:
@@ -69,6 +81,20 @@ class Settings(BaseSettings):
             if separator and name.strip() and executable.strip():
                 applications[name.strip().lower()] = executable.strip()
         return applications
+
+    @property
+    def approved_working_roots_list(self) -> list[str]:
+        if not self.approved_working_roots.strip():
+            return []
+        return [d.strip() for d in self.approved_working_roots.split(",") if d.strip()]
+
+    @property
+    def command_allowlist_set(self) -> set[str]:
+        return {c.strip().lower() for c in self.command_allowlist.split(",") if c.strip()}
+
+    @property
+    def git_allowed_subcommands_set(self) -> set[str]:
+        return {s.strip().lower() for s in self.git_allowed_subcommands.split(",") if s.strip()}
 
 
 @lru_cache

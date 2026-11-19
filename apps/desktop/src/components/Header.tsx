@@ -1,6 +1,6 @@
-import { Activity, ShieldAlert, ShieldCheck, Terminal, Cpu, FolderGit2, Settings, MonitorPlay, Mic, Volume2 } from "lucide-react";
+import { Activity, ShieldAlert, ShieldCheck, Terminal, Cpu, FolderGit2, Settings, MonitorPlay, Mic, GitBranch } from "lucide-react";
 
-export type ViewTab = "chat" | "computer" | "tools" | "files" | "settings";
+export type ViewTab = "chat" | "computer" | "tools" | "files" | "developer" | "settings";
 
 interface HeaderProps {
   currentTab: ViewTab;
@@ -26,6 +26,7 @@ export function Header({
     { id: "computer", label: "Desktop Control", icon: <MonitorPlay size={15} /> },
     { id: "tools", label: "Safe Tools", icon: <Cpu size={15} /> },
     { id: "files", label: "Files (Phase 4)", icon: <FolderGit2 size={15} /> },
+    { id: "developer", label: "Dev JARVIS", icon: <GitBranch size={15} /> },
     { id: "settings", label: "Settings", icon: <Settings size={15} /> },
   ];
 

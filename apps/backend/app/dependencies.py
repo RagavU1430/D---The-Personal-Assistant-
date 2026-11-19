@@ -9,6 +9,7 @@ from .tools.computer import register_computer_tools
 from .tools.files import register_file_tools
 from .tools.registry import ToolRegistry
 from .tools.system import register_system_tools
+from .tools.terminal import register_terminal_tools
 
 
 @lru_cache
@@ -20,7 +21,9 @@ def get_app_settings() -> Settings:
 def get_tool_registry() -> ToolRegistry:
     registry = register_system_tools(ToolRegistry())
     registry = register_computer_tools(registry, get_computer_controller())
-    return register_file_tools(registry, get_app_settings())
+    registry = register_file_tools(registry, get_app_settings())
+    registry = register_terminal_tools(registry, get_app_settings())
+    return registry
 
 
 @lru_cache
@@ -65,7 +68,7 @@ def get_ai_provider() -> AIProvider:
                     )
                 )
 
-    # Add custom OpenAI-compatible providers from config
+    # Add custom OpenAI-compatible providers
     # Format: "name1=base_url1,api_key1,model1|name2=base_url2,api_key2,model2"
     if app_settings.custom_ai_providers.strip():
         for provider_spec in app_settings.custom_ai_providers.split("|"):
@@ -81,13 +84,13 @@ def get_ai_provider() -> AIProvider:
                 continue
             base_url = config_parts[0]
             api_key = config_parts[1] if len(config_parts) > 1 and config_parts[1] else None
-            model = config_parts[2] if len(config_parts) > 2 and config_parts[2] else None
+            custom_model = config_parts[2] if len(config_parts) > 2 and config_parts[2] else None
             providers.append(
                 AIProviderFactory.create_custom(
                     name=custom_name,
                     base_url=base_url,
                     api_key=api_key,
-                    model=model,
+                    model=custom_model,
                     timeout=app_settings.ai_timeout_seconds,
                 )
             )

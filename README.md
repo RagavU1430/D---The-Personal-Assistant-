@@ -17,7 +17,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Phase_3-Complete-10B981?style=flat-square&logo=vercel&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/Phase_4-Complete-10B981?style=flat-square&logo=gitbook&logoColor=white&labelColor=0F172A" />
-  <img src="https://img.shields.io/badge/Phase_5-Design_In_Progress-F59E0B?style=flat-square&logo=github&logoColor=white&labelColor=0F172A" />
+  <img src="https://img.shields.io/badge/Phase_5-Complete-10B981?style=flat-square&logo=github&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/AI_Providers-Custom_Endpoints_Supported-0EA5E9?style=flat-square&logo=anthropic&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/Registered_Tools-40+-8B5CF6?style=flat-square&logo=wrench&logoColor=white&labelColor=0F172A" />
   <img src="https://img.shields.io/badge/Tests-Passing-10B981?style=flat-square&logo=pytest&logoColor=white&labelColor=0F172A" />
@@ -46,6 +46,8 @@ No cloud dependency. No hidden autonomy. No surprise executions.
 | **Screen Awareness** | On-demand screenshots, active window detection, window enumeration |
 | **File System Intelligence** | Search, read, write, copy, move, rename, compress, find duplicates/large files, organize — all path-restricted |
 | **Safe File Handling** | Move to Recycle Bin (reversible, path-restricted, confirmed) |
+| **Developer JARVIS** | Controlled Git operations, multi-framework test runner, log diagnostics, and allowlisted CLI tools — boundary restricted |
+| **Voice Assist** | Client-side speech recognition & synthesis, holographic energy orb, real-time waveform visualizer |
 
 ---
 

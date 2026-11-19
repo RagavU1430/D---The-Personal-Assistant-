@@ -28,6 +28,18 @@ File tools are guarded by multi-layered security controls:
 * **Denial-of-Service Mitigations:** File reads and writes enforce `max_file_size_mb` guards (default 100 MB). Compression tools validate destination paths and output size limits.
 * **Audit Trail:** Every file operation logs `{tool, path, risk, decision, duration_ms, success, error_code}` with secret redaction.
 
+## Phase 5 Terminal / Developer Tools Security
+
+Terminal tools are guarded by multi-layered security controls:
+* **Approved Working Roots:** All working directories must resolve within `APPROVED_WORKING_ROOTS`. Directory traversal (`..`), symlink escapes, and paths outside approved roots trigger `DIR_NOT_ALLOWED`.
+* **Command Allowlist:** Only commands in `COMMAND_ALLOWLIST` (e.g., `git`, `pytest`, `python`, `npm`, `cargo`, `go`, `ruff`, `mypy`) can execute. Unknown commands return `COMMAND_NOT_ALLOWED`.
+* **Git Subcommand Allowlist:** Only git subcommands in `GIT_ALLOWED_SUBCOMMANDS` (e.g., `status`, `diff`, `log`, `branch`, `commit`, `push`) are permitted. Disallowed subcommands return `GIT_COMMAND_NOT_ALLOWED`.
+* **Shell Injection Prevention:** All arguments are scanned for shell injection operators (`;`, `&&`, `||`, `|`, backticks, `$()`, `>`, `<`, `%VAR%`). Detection returns `INJECTION_DETECTED`.
+* **No Shell=True:** All subprocess execution uses `asyncio.create_subprocess_exec` with explicit argument arrays — never `shell=True`.
+* **Output Size Limits:** Command output is truncated at `MAX_OUTPUT_BYTES` (default 1 MB) to prevent DoS.
+* **Execution Timeout:** All commands are bounded by `TERMINAL_TIMEOUT_SECONDS` (default 30s).
+* **Audit Trail:** Every terminal operation logs `{tool, command, args, working_dir, risk, decision, duration_ms, success, error_code}` with secret redaction.
+
 ## Secret Handling
 
 Secrets are loaded from environment configuration (`.env`) and excluded from Git. Logs automatically redact fields containing keys, tokens, passwords, and secrets.

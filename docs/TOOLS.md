@@ -51,6 +51,22 @@ All file tools operate strictly under `APPROVED_FILE_ROOTS`. Mutating tools are 
 | `organize_directory` | CONFIRM | Plans or executes directory organization by extension, date, or size. |
 | `move_to_recycle_bin` | CONFIRM | Reversibly moves an approved item to the Windows Recycle Bin using `SHFileOperationW`. |
 
+### Phase 5: Developer JARVIS (Terminal) Tools
+All terminal tools operate strictly under `APPROVED_WORKING_ROOTS`. Commands are validated against `COMMAND_ALLOWLIST`. Git subcommands are validated against `GIT_ALLOWED_SUBCOMMANDS`. Shell injection operators (`;`, `&&`, `||`, `|`, backticks, `$()`, `>`, `<`) are rejected in all arguments.
+
+| Tool Name | Risk Level | Description |
+|-----------|------------|-------------|
+| `git_status` | SAFE | Get git status: branch, staged/unstaged/untracked files. |
+| `git_diff` | SAFE | Show git diff of unstaged (or staged) changes. |
+| `git_log` | SAFE | Show recent git commit history. |
+| `git_branch` | SAFE | List git branches and show the current active branch. |
+| `git_commit` | CONFIRM | Stage and commit changes to the git repository. |
+| `git_push` | CONFIRM | Push commits to a remote git repository. |
+| `run_tests` | CONFIRM | Run the project test suite (auto-detects pytest, cargo, go test, npm test, jest). |
+| `analyze_logs` | SAFE | Extract errors, warnings, and tracebacks from raw log text. |
+| `execute_command` | CONFIRM | Execute an allowlisted developer command in an approved working directory. |
+| `terminal_status` | SAFE | Get terminal configuration status (allowlist, working dirs). |
+
 ## Risk and Safety Governance
 
 * `SAFE` tools execute automatically.

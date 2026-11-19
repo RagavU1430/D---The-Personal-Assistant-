@@ -80,3 +80,86 @@ export async function takeScreenshot(): Promise<ToolResult> {
   if (!response.ok) throw new Error("Screenshot request failed");
   return response.json() as Promise<ToolResult>;
 }
+
+// Phase 5 — Terminal / Developer JARVIS API
+export interface GitCommandInput {
+  subcommand: string;
+  args?: string[];
+  working_dir?: string;
+}
+
+export interface TestCommandInput {
+  framework?: string;
+  args?: string[];
+  working_dir?: string;
+}
+
+export interface LogAnalysisInput {
+  content: string;
+  max_findings?: number;
+}
+
+export interface ExecuteCommandInput {
+  command: string;
+  args?: string[];
+  working_dir?: string;
+}
+
+export interface TerminalStatusResponse {
+  enabled: boolean;
+  allowlist: string[];
+  working_dirs: string[];
+  max_output_bytes: number;
+  git_subcommands: string[];
+}
+
+export async function runGitCommand(input: GitCommandInput): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "git", arguments: input }),
+  });
+  if (!response.ok) throw new Error("Git command failed");
+  return response.json() as Promise<ToolResult>;
+}
+
+export async function runTests(input: TestCommandInput): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "run_tests", arguments: input }),
+  });
+  if (!response.ok) throw new Error("Test execution failed");
+  return response.json() as Promise<ToolResult>;
+}
+
+export async function analyzeLogs(input: LogAnalysisInput): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "analyze_logs", arguments: input }),
+  });
+  if (!response.ok) throw new Error("Log analysis failed");
+  return response.json() as Promise<ToolResult>;
+}
+
+export async function executeTerminalCommand(input: ExecuteCommandInput): Promise<ToolResult> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "execute_command", arguments: input }),
+  });
+  if (!response.ok) throw new Error("Command execution failed");
+  return response.json() as Promise<ToolResult>;
+}
+
+export async function getTerminalStatus(): Promise<TerminalStatusResponse> {
+  const response = await fetch(`${API_BASE}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tool: "terminal_status", arguments: {} }),
+  });
+  if (!response.ok) throw new Error("Terminal status unavailable");
+  const result = await response.json() as ToolResult;
+  return result.data as TerminalStatusResponse;
+}
